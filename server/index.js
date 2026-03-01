@@ -65,7 +65,7 @@ app.get('/api/info', async (req, res) => {
             // Video formats
             else if (f.vcodec !== 'none') {
                 const height = f.height || 0;
-                const resLabel = height >= 2160 ? '4K' : height >= 1440 ? '1440p' : `${height}p`;
+                const resLabel = height >= 4320 ? '8K' : height >= 2880 ? '5K' : height >= 2160 ? '4K' : height >= 1440 ? '1440p' : `${height}p`;
                 const fpsLabel = f.fps && f.fps > 30 ? ` ${f.fps}fps` : '';
                 const label = `${resLabel}${fpsLabel} · ${f.ext.toUpperCase()}`;
 
