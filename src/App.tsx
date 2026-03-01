@@ -62,6 +62,7 @@ const App: React.FC = () => {
             duration={result.duration}
             format={result.format}
             qualities={result.qualities}
+            originalUrl={result.originalUrl}
             onDownload={(formatId) => {
               const downloadUrl = `/api/download?url=${encodeURIComponent(result.originalUrl)}&format=${formatId}`;
               window.location.href = downloadUrl;

@@ -120,8 +120,30 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// SSE Connection Store
+const connections = new Map();
+
+// SSE Route for progress tracking
+app.get('/api/progress/:sessionId', (req, res) => {
+    const { sessionId } = req.params;
+
+    // Set headers for Server-Sent Events
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    });
+
+    // Store connection
+    connections.set(sessionId, res);
+
+    req.on('close', () => {
+        connections.delete(sessionId);
+    });
+});
+
 app.get('/api/download', async (req, res) => {
-    const { url, format } = req.query;
+    const { url, format, sessionId = Math.random().toString(36).substring(2, 15) } = req.query;
 
     if (!url) {
         return res.status(400).send('URL is required');
@@ -135,23 +157,53 @@ app.get('/api/download', async (req, res) => {
         ? formatCode
         : `${formatCode}+bestaudio/best`;
 
-    console.log(`Downloading: ${url} with format: ${formatReq}`);
+    console.log(`Downloading: ${url} with format: ${formatReq} (Session: ${sessionId})`);
 
     // Create a temporary filename
     const tmpDir = os.tmpdir();
-    const sessionId = Math.random().toString(36).substring(2, 15);
     // Let yt-dlp decide the final extension since merging might change it
     const outputTemplate = path.join(tmpDir, `ytdlp_${sessionId}_%(title)s.%(ext)s`);
 
     try {
         console.log(`Starting download to temp local file...`);
-        // execute youtube-dl and wait for it to finish downloading & merging
-        await youtubedl(url, {
+        // execute youtube-dl using the raw exec command to capture stdout
+        const dlProcess = youtubedl.exec(url, {
             format: formatReq,
             output: outputTemplate,
             noWarnings: true,
             addHeader: ['referer:youtube.com', 'user-agent:Mozilla/5.0']
         });
+
+        // Listen to stdout to parse downloading progress
+        dlProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            // yt-dlp stdout example: [download]  45.0% of 1.2GiB at 5.0MiB/s ETA 00:30
+            const progressMatch = output.match(/\[download\]\s+([\d\.]+)%\s+of\s+.*?\s+at\s+(.*?)\s+ETA\s+(.*)/);
+            if (progressMatch && connections.has(sessionId)) {
+                const percent = parseFloat(progressMatch[1]);
+                const speed = progressMatch[2];
+                const eta = progressMatch[3].trim();
+
+                connections.get(sessionId).write(`data: ${JSON.stringify({
+                    status: 'downloading',
+                    percent,
+                    speed,
+                    eta
+                })}\n\n`);
+            } else if (output.includes('[Merger]') || output.includes('Merging')) {
+                if (connections.has(sessionId)) {
+                    connections.get(sessionId).write(`data: ${JSON.stringify({ status: 'processing' })}\n\n`);
+                }
+            }
+        });
+
+        await dlProcess; // Wait for completion
+
+        if (connections.has(sessionId)) {
+            connections.get(sessionId).write(`data: ${JSON.stringify({ status: 'completed' })}\n\n`);
+            connections.get(sessionId).end();
+            connections.delete(sessionId);
+        }
 
         console.log(`Download/Merge complete. Finding actual file...`);
         // We have to find the actual file because the extension could be .mp4, .mkv, .webm
