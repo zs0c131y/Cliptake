@@ -192,11 +192,11 @@ app.get('/api/download', async (req, res) => {
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.use((req, res) => {
         res.sendFile(path.join(distPath, 'index.html'));
     });
 } else {
-    app.get('/', (req, res) => {
+    app.use((req, res) => {
         res.send('API is running, but frontend build not found. Run "npm run build" in the root directory.');
     });
 }
