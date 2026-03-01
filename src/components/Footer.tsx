@@ -5,34 +5,19 @@ import './Footer.css';
 const Footer: React.FC = () => {
     return (
         <footer className="footer">
-            <div className="footer-content">
+            <div className="footer-inner">
                 <div className="footer-brand">
-                    <div className="logo">
-                        <FiDownloadCloud className="logo-icon" />
-                        <span className="logo-text">Clip<span className="gradient-text">take</span></span>
-                    </div>
-                    <p className="footer-desc">
-                        Fast, private video and audio downloads.
-                    </p>
+                    <FiDownloadCloud className="logo-icon" />
+                    <span>Clip<span className="gradient-text">take</span></span>
+                    <span className="footer-copy">— © {new Date().getFullYear()}</span>
                 </div>
 
-                <div className="footer-links-group">
-                    <div>
-                        <h4>Legal</h4>
-                        <a href="#terms">Terms</a>
-                        <a href="#privacy">Privacy</a>
-                        <a href="#dmca">DMCA</a>
-                    </div>
-                    <div>
-                        <h4>Help</h4>
-                        <a href="#faq">FAQ</a>
-                        <a href="#contact">Contact</a>
-                    </div>
-                </div>
-            </div>
-
-            <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} Cliptake</p>
+                <nav className="footer-links">
+                    <a href="#terms">Terms</a>
+                    <a href="#privacy">Privacy</a>
+                    <a href="#dmca">DMCA</a>
+                    <a href="#faq">FAQ</a>
+                </nav>
             </div>
         </footer>
     );

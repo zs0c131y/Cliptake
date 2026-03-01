@@ -4,35 +4,31 @@ import './Features.css';
 
 const featuresData = [
     {
-        icon: <FiZap />,
+        icon: <FiZap size={16} />,
         title: 'Lightning Fast',
-        description: 'Our dedicated servers process and deliver your files instantly, with zero artificial throttling.'
+        description: 'Dedicated servers deliver files instantly with zero throttling.'
     },
     {
-        icon: <FiShield />,
-        title: '100% Secure',
-        description: 'We respect your privacy. No logs are kept, and all connections are secured with AES encryption.'
+        icon: <FiShield size={16} />,
+        title: 'Private',
+        description: 'No logs kept. All connections are end-to-end secured.'
     },
     {
-        icon: <FiVideo />,
-        title: 'Highest Quality',
-        description: 'Download up to 4K resolution videos and 320kbps MP3 audio without any compression artifacts.'
+        icon: <FiVideo size={16} />,
+        title: 'Up to 4K',
+        description: 'Lossless video up to 4K and MP3 audio up to 320kbps.'
     },
     {
-        icon: <FiSmartphone />,
-        title: 'Cross-Platform',
-        description: 'Works flawlessly on Windows, Mac, iOS, Android, and Linux without installing any software.'
+        icon: <FiSmartphone size={16} />,
+        title: 'Any Device',
+        description: 'Works on Windows, Mac, iOS and Android — no installs needed.'
     }
 ];
 
 const Features: React.FC = () => {
     return (
-        <section id="features" className="features-section">
-            <div className="features-header">
-                <h2 className="features-title">Why choose <span className="gradient-text">Cliptake?</span></h2>
-                <p className="features-subtitle">The most advanced features built into a completely free tool.</p>
-            </div>
-
+        <section id="features" className="features-section animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <p className="features-label">Why Cliptake</p>
             <div className="features-grid">
                 {featuresData.map((feature, idx) => (
                     <div key={idx} className="feature-card">

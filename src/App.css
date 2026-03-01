@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  position: relative;
 }
 
 main {
@@ -11,8 +10,13 @@ main {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 0 1.5rem 4rem;
-  z-index: 1;
+  padding: 0 1.5rem 6rem;
+}
+
+@media (max-width: 480px) {
+  main {
+    padding: 0 1rem 4rem;
+  }
 }
