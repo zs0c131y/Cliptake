@@ -85,7 +85,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
                     <div className="quality-list">
                         <p className="section-label">Available {format === 'video' ? 'Video' : 'Audio'} Qualities:</p>
                         {qualities.map((q, idx) => (
-                            <div key={idx} className="quality-item glass-panel">
+                            <div key={idx} className="quality-item">
                                 <div className="quality-info">
                                     <FiFileText className="format-icon" />
                                     <span className="quality-label">{q.label}</span>

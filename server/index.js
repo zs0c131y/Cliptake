@@ -56,29 +56,26 @@ app.get('/api/info', async (req, res) => {
                 audioFormats.push({
                     format_id: f.format_id,
                     ext: f.ext,
-                    label: `Audio (${f.abr || f.tbr} kbps) - ${f.ext}`,
+                    label: `${f.abr || f.tbr} kbps · ${f.ext.toUpperCase()}`,
                     size: formattedSize,
                     rawSize: size || 0,
                     quality: f.abr || 0
                 });
             }
-            // Video formats (has video. might have audio or might need merge, we'll expose the high res ones)
+            // Video formats
             else if (f.vcodec !== 'none') {
-                const resolution = f.format_note || `${f.height}p`;
-                const label = `${resolution} ${f.fps ? f.fps + 'fps' : ''} (${f.ext})`;
-                const isVideoMuted = f.acodec === 'none'; // Needs merging
-                const finalLabel = isVideoMuted ? `${label} (Needs merge)` : label;
+                const height = f.height || 0;
+                const resLabel = height >= 2160 ? '4K' : height >= 1440 ? '1440p' : `${height}p`;
+                const fpsLabel = f.fps && f.fps > 30 ? ` ${f.fps}fps` : '';
+                const label = `${resLabel}${fpsLabel} · ${f.ext.toUpperCase()}`;
 
-                // Exclude very low quality ones if we want a clean UI, but we'll include them for now 
-                // and deduplicate based on resolution string below
                 videoFormats.push({
                     format_id: f.format_id,
                     ext: f.ext,
-                    resolution: f.height || 0,
-                    label: finalLabel,
+                    resolution: height,
+                    label,
                     size: formattedSize,
-                    rawSize: size || 0,
-                    needsMerge: isVideoMuted
+                    rawSize: size || 0
                 });
             }
         });

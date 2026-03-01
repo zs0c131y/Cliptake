@@ -3,44 +3,6 @@
   flex-direction: column;
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
-}
-
-/* Background Glowing Orbs */
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  z-index: -1;
-  opacity: 0.5;
-  animation: float 20s infinite alternate ease-in-out;
-}
-
-.glow-orb-1 {
-  top: -10%;
-  left: -5%;
-  width: 500px;
-  height: 500px;
-  background: var(--accent-glow);
-}
-
-.glow-orb-2 {
-  bottom: -10%;
-  right: -5%;
-  width: 600px;
-  height: 600px;
-  background: var(--accent-glow-secondary);
-  animation-delay: -5s;
-}
-
-@keyframes float {
-  0% {
-    transform: translate(0, 0);
-  }
-
-  100% {
-    transform: translate(50px, 50px);
-  }
 }
 
 main {
@@ -49,8 +11,8 @@ main {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1200px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0 1.5rem 4rem;
   z-index: 1;
 }

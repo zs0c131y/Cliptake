@@ -35,7 +35,7 @@ const Features: React.FC = () => {
 
             <div className="features-grid">
                 {featuresData.map((feature, idx) => (
-                    <div key={idx} className="feature-card glass-panel">
+                    <div key={idx} className="feature-card">
                         <div className="feature-icon-wrapper">
                             {feature.icon}
                         </div>

@@ -42,9 +42,6 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Background Orbs */}
-      <div className="glow-orb glow-orb-1"></div>
-      <div className="glow-orb glow-orb-2"></div>
 
       <Header />
 

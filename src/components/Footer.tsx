@@ -12,31 +12,27 @@ const Footer: React.FC = () => {
                         <span className="logo-text">Vid<span className="gradient-text">Fetch</span></span>
                     </div>
                     <p className="footer-desc">
-                        The simplest, fastest way to save content from the web.
+                        Fast, private video and audio downloads.
                     </p>
                 </div>
 
                 <div className="footer-links-group">
                     <div>
                         <h4>Legal</h4>
-                        <a href="#terms">Terms of Service</a>
-                        <a href="#privacy">Privacy Policy</a>
+                        <a href="#terms">Terms</a>
+                        <a href="#privacy">Privacy</a>
                         <a href="#dmca">DMCA</a>
                     </div>
                     <div>
-                        <h4>Support</h4>
+                        <h4>Help</h4>
                         <a href="#faq">FAQ</a>
-                        <a href="#contact">Contact Us</a>
-                        <a href="#api">API Docs</a>
+                        <a href="#contact">Contact</a>
                     </div>
                 </div>
             </div>
 
             <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} VidFetch. All rights reserved.</p>
-                <p className="disclaimer">
-                    VidFetch does not host any files on its servers. We simply provide a tool to download publicly available content.
-                </p>
+                <p>&copy; {new Date().getFullYear()} VidFetch</p>
             </div>
         </footer>
     );
