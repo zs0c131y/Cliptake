@@ -91,32 +91,36 @@ const ResultCard: React.FC<ResultCardProps> = ({
                                     <span className="quality-label">{q.label}</span>
                                     <span className="quality-size">{q.size}</span>
                                 </div>
-                                {downloadingFormatId === q.format_id ? (
-                                    <div className="progress-status-container animate-fade-in">
-                                        <span className="progress-text">
-                                            {progress.percent === 100 ? progress.speed : `${progress.percent}%`}
-                                        </span>
-                                        <span className="progress-detail">
-                                            {progress.percent < 100 ? `${progress.speed} - ETA: ${progress.eta}` : progress.eta}
-                                        </span>
-                                        <div className="progress-bar-container">
-                                            <div
-                                                className="progress-bar-fill"
-                                                style={{ width: `${Math.max(5, progress.percent)}%` }}
-                                            />
+                                <div className="quality-action">
+                                    {downloadingFormatId === q.format_id ? (
+                                        <div className="progress-status-container animate-fade-in">
+                                            <span className="progress-text">
+                                                {progress.percent === 100 ? progress.speed : `${progress.percent}%`}
+                                            </span>
+                                            <span className="progress-detail">
+                                                {progress.percent < 100
+                                                    ? `${progress.speed} – ETA: ${progress.eta}`
+                                                    : progress.eta}
+                                            </span>
+                                            <div className="progress-bar-inline">
+                                                <div
+                                                    className="progress-bar-inline-fill"
+                                                    style={{ width: `${Math.max(5, progress.percent)}%` }}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <button
-                                        className="download-btn-small"
-                                        onClick={() => handleStartDownload(q.format_id)}
-                                        aria-label={`Download ${q.label}`}
-                                        disabled={downloadingFormatId !== null}
-                                        style={downloadingFormatId ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                                    >
-                                        <FiDownload /> Download
-                                    </button>
-                                )}
+                                    ) : (
+                                        <button
+                                            className="download-btn-small"
+                                            onClick={() => handleStartDownload(q.format_id)}
+                                            aria-label={`Download ${q.label}`}
+                                            disabled={downloadingFormatId !== null}
+                                            style={downloadingFormatId ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                                        >
+                                            <FiDownload /> Download
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

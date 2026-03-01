@@ -74,7 +74,20 @@
 }
 
 @media (max-width: 640px) {
+    .features-section {
+        margin: 3rem auto 2rem;
+        padding: 0 1rem;
+    }
+
+    .features-title {
+        font-size: 1.5rem;
+    }
+
     .features-grid {
         grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+        padding: 1.25rem;
     }
 }

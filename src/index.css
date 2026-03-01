@@ -72,6 +72,21 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding: 0 env(safe-area-inset-right, 0) 0 env(safe-area-inset-left, 0);
+}
+
+/* Prevent any child container from overflowing viewport on mobile */
+* {
+  max-width: 100%;
+}
+
+/* But allow grid/flex items to grow beyond their own box */
+img,
+input,
+button,
+select,
+textarea {
+  max-width: 100%;
 }
 
 /* Base Styles */
@@ -163,7 +178,7 @@ input {
   background: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-top: 1rem;
+  /* margin-top intentionally omitted — callers add their own spacing */
 }
 
 .progress-bar-fill {
