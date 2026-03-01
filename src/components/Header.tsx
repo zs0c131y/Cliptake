@@ -8,7 +8,7 @@ const Header: React.FC = () => {
       <div className="header-container">
         <div className="logo">
           <FiDownloadCloud className="logo-icon" />
-          <span className="logo-text">Vid<span className="gradient-text">Fetch</span></span>
+          <span className="logo-text">Clip<span className="gradient-text">take</span></span>
         </div>
       </div>
     </header>

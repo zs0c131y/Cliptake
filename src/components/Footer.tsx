@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
                 <div className="footer-brand">
                     <div className="logo">
                         <FiDownloadCloud className="logo-icon" />
-                        <span className="logo-text">Vid<span className="gradient-text">Fetch</span></span>
+                        <span className="logo-text">Clip<span className="gradient-text">take</span></span>
                     </div>
                     <p className="footer-desc">
                         Fast, private video and audio downloads.
@@ -32,7 +32,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} VidFetch</p>
+                <p>&copy; {new Date().getFullYear()} Cliptake</p>
             </div>
         </footer>
     );

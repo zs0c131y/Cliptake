@@ -29,7 +29,7 @@ const Features: React.FC = () => {
     return (
         <section id="features" className="features-section">
             <div className="features-header">
-                <h2 className="features-title">Why choose <span className="gradient-text">VidFetch?</span></h2>
+                <h2 className="features-title">Why choose <span className="gradient-text">Cliptake?</span></h2>
                 <p className="features-subtitle">The most advanced features built into a completely free tool.</p>
             </div>
 
