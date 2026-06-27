@@ -12,6 +12,14 @@ interface ResultCardProps {
     originalUrl?: string;
 }
 
+interface QualityOption {
+    format_id: string;
+    label: string;
+    size: string;
+    delivery?: 'direct' | 'stream' | 'prepare';
+    hasAudio?: boolean;
+}
+
 const ResultCard: React.FC<ResultCardProps> = ({
     title, thumbnail, duration, format, qualities, onDownload, originalUrl
 }) => {
@@ -20,17 +28,31 @@ const ResultCard: React.FC<ResultCardProps> = ({
         percent: 0, speed: '', eta: ''
     });
 
-    const handleStartDownload = (formatId: string) => {
+    const getDeliveryLabel = (quality: QualityOption) => {
+        if (quality.delivery === 'direct') return 'Direct';
+        if (quality.delivery === 'stream') return 'Stream';
+        return quality.hasAudio === false ? 'Merge' : 'Prepare';
+    };
+
+    const handleStartDownload = (quality: QualityOption) => {
+        const formatId = quality.format_id;
         if (!originalUrl) {
             onDownload(formatId);
             return;
         }
 
         setDownloadingFormatId(formatId);
-        setProgress({ percent: 0, speed: 'Starting…', eta: 'Calculating' });
+        setProgress({ percent: 0, speed: 'Starting...', eta: 'Opening download' });
 
         const sessionId = Math.random().toString(36).substring(2, 15);
         const finalDownloadUrl = `/api/download?url=${encodeURIComponent(originalUrl)}&format=${formatId}&sessionId=${sessionId}`;
+
+        if (quality.delivery === 'direct') {
+            window.open(finalDownloadUrl, '_blank', 'noopener,noreferrer');
+            setProgress({ percent: 100, speed: 'Direct link', eta: 'Opened in a new tab' });
+            setTimeout(() => setDownloadingFormatId(null), 1600);
+            return;
+        }
 
         setTimeout(() => {
             window.location.href = finalDownloadUrl;
@@ -44,7 +66,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
                 if (data.status === 'downloading') {
                     setProgress({ percent: data.percent, speed: data.speed, eta: data.eta });
                 } else if (data.status === 'processing') {
-                    setProgress({ percent: 100, speed: 'Merging…', eta: 'Finalizing' });
+                    setProgress({ percent: data.percent ?? 100, speed: data.speed || 'Merging...', eta: data.eta || 'Finalizing' });
+                } else if (data.status === 'streaming' || data.status === 'redirecting') {
+                    setProgress({ percent: 100, speed: data.speed || 'Starting', eta: data.eta || 'Ready' });
                 } else if (data.status === 'completed') {
                     eventSource.close();
                     setTimeout(() => setDownloadingFormatId(null), 3000);
@@ -81,11 +105,14 @@ const ResultCard: React.FC<ResultCardProps> = ({
                     Available {format === 'video' ? 'Video' : 'Audio'} Qualities
                 </p>
                 <div className="quality-list">
-                    {qualities.map((q, idx) => (
+                    {qualities.map((q: QualityOption, idx) => (
                         <div key={idx} className="quality-item">
                             <div className="quality-info">
                                 <FiFileText className="format-icon" />
                                 <span className="quality-label">{q.label}</span>
+                                <span className={`delivery-badge ${q.delivery || 'prepare'}`}>
+                                    {getDeliveryLabel(q)}
+                                </span>
                                 <span className="quality-size">{q.size}</span>
                             </div>
                             <div className="quality-action">
@@ -109,7 +136,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
                                 ) : (
                                     <button
                                         className="download-btn-small"
-                                        onClick={() => handleStartDownload(q.format_id)}
+                                        onClick={() => handleStartDownload(q)}
                                         aria-label={`Download ${q.label}`}
                                         disabled={downloadingFormatId !== null}
                                         style={downloadingFormatId ? { opacity: 0.4, cursor: 'not-allowed' } : {}}

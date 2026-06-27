@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiSearch, FiVideo, FiMusic, FiChevronDown } from 'react-icons/fi';
+import { FiLink, FiMusic, FiSearch, FiVideo } from 'react-icons/fi';
 import './DownloaderInput.css';
 
 interface DownloaderInputProps {
@@ -10,53 +10,46 @@ interface DownloaderInputProps {
 const DownloaderInput: React.FC<DownloaderInputProps> = ({ onSearch, isLoading }) => {
     const [url, setUrl] = useState('');
     const [format, setFormat] = useState<'video' | 'audio'>('video');
-    const [isFormatOpen, setIsFormatOpen] = useState(false);
+    const [touched, setTouched] = useState(false);
+
+    const trimmedUrl = url.trim();
+    const isValidUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmedUrl);
+    const showError = touched && trimmedUrl.length > 0 && !isValidUrl;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (url.trim()) {
-            onSearch(url, format);
+        setTouched(true);
+        if (isValidUrl) {
+            onSearch(trimmedUrl, format);
         }
     };
 
     return (
         <div className="downloader-container animate-fade-in" style={{ animationDelay: '0.15s' }}>
             <form onSubmit={handleSubmit}>
+                <div className="mode-tabs" aria-label="Download type">
+                    <button
+                        type="button"
+                        className={`mode-tab ${format === 'video' ? 'active' : ''}`}
+                        onClick={() => setFormat('video')}
+                        aria-pressed={format === 'video'}
+                    >
+                        <FiVideo size={15} />
+                        Video
+                    </button>
+                    <button
+                        type="button"
+                        className={`mode-tab ${format === 'audio' ? 'active' : ''}`}
+                        onClick={() => setFormat('audio')}
+                        aria-pressed={format === 'audio'}
+                    >
+                        <FiMusic size={15} />
+                        Audio
+                    </button>
+                </div>
+
                 <div className="input-wrapper">
-                    {/* Format Selector */}
-                    <div className="format-selector">
-                        <button
-                            type="button"
-                            className="format-toggle"
-                            onClick={() => setIsFormatOpen(!isFormatOpen)}
-                        >
-                            {format === 'video' ? <FiVideo size={13} /> : <FiMusic size={13} />}
-                            <span>{format === 'video' ? 'Video' : 'Audio'}</span>
-                            <FiChevronDown className={`chevron ${isFormatOpen ? 'open' : ''}`} />
-                        </button>
-
-                        {isFormatOpen && (
-                            <div className="format-menu">
-                                <button
-                                    type="button"
-                                    className={`format-option ${format === 'video' ? 'active' : ''}`}
-                                    onClick={() => { setFormat('video'); setIsFormatOpen(false); }}
-                                >
-                                    <FiVideo size={14} /> Video (MP4)
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`format-option ${format === 'audio' ? 'active' : ''}`}
-                                    onClick={() => { setFormat('audio'); setIsFormatOpen(false); }}
-                                >
-                                    <FiMusic size={14} /> Audio (MP3)
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Vertical divider */}
-                    <span className="input-divider" aria-hidden="true" />
+                    <FiLink className="input-icon" aria-hidden="true" />
 
                     {/* URL input */}
                     <input
@@ -65,6 +58,9 @@ const DownloaderInput: React.FC<DownloaderInputProps> = ({ onSearch, isLoading }
                         placeholder="Paste YouTube link..."
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
+                        onBlur={() => setTouched(true)}
+                        aria-invalid={showError}
+                        aria-describedby={showError ? 'url-error' : 'url-hint'}
                         required
                         disabled={isLoading}
                     />
@@ -73,7 +69,7 @@ const DownloaderInput: React.FC<DownloaderInputProps> = ({ onSearch, isLoading }
                     <button
                         type="submit"
                         className={`submit-btn ${isLoading ? 'loading' : ''}`}
-                        disabled={isLoading || !url.trim()}
+                        disabled={isLoading || !isValidUrl}
                     >
                         {isLoading ? (
                             <span className="loader" />
@@ -86,9 +82,15 @@ const DownloaderInput: React.FC<DownloaderInputProps> = ({ onSearch, isLoading }
                 </div>
             </form>
 
-            <p className="input-hint">
-                Supports youtube.com &amp; youtu.be links
-            </p>
+            {showError ? (
+                <p className="input-hint error" id="url-error">
+                    Enter a valid youtube.com or youtu.be link.
+                </p>
+            ) : (
+                <p className="input-hint" id="url-hint">
+                    Direct formats start instantly. High-resolution video may need a short merge step.
+                </p>
+            )}
         </div>
     );
 };

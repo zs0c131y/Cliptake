@@ -12,12 +12,7 @@ const Footer: React.FC = () => {
                     <span className="footer-copy">— © {new Date().getFullYear()}</span>
                 </div>
 
-                <nav className="footer-links">
-                    <a href="#terms">Terms</a>
-                    <a href="#privacy">Privacy</a>
-                    <a href="#dmca">DMCA</a>
-                    <a href="#faq">FAQ</a>
-                </nav>
+                <p className="footer-note">Use responsibly and respect platform terms.</p>
             </div>
         </footer>
     );

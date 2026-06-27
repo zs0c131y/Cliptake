@@ -6,17 +6,17 @@ const Hero: React.FC = () => {
         <section className="hero animate-fade-in">
             <div className="hero-eyebrow">
                 <span className="hero-eyebrow-dot" />
-                YouTube · 4K · MP3
+                Direct links · Smart merge · Low bandwidth
             </div>
 
             <h1 className="hero-title">
-                Download anything<br />
-                from <span className="gradient-text">YouTube</span>
+                Fast YouTube downloads<br />
+                without the server bloat
             </h1>
 
             <p className="hero-subtitle">
-                Paste a link, pick your quality, and download in seconds.
-                Up to 4K video or lossless audio — free and private.
+                Paste a link, choose video or audio, and Cliptake uses the cheapest reliable path:
+                direct transfer when available, temporary merging only when needed.
             </p>
         </section>
     );

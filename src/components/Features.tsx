@@ -1,27 +1,27 @@
 import React from 'react';
-import { FiShield, FiZap, FiSmartphone, FiVideo } from 'react-icons/fi';
+import { FiHardDrive, FiShield, FiSmartphone, FiZap } from 'react-icons/fi';
 import './Features.css';
 
 const featuresData = [
     {
         icon: <FiZap size={16} />,
-        title: 'Lightning Fast',
-        description: 'Dedicated servers deliver files instantly with zero throttling.'
+        title: 'Direct when possible',
+        description: 'Single-file formats can hand off to the source, cutting server bandwidth.'
+    },
+    {
+        icon: <FiHardDrive size={16} />,
+        title: 'Low storage load',
+        description: 'Only merged video uses temporary files, and they are removed after delivery.'
     },
     {
         icon: <FiShield size={16} />,
-        title: 'Private',
-        description: 'No logs kept. All connections are end-to-end secured.'
-    },
-    {
-        icon: <FiVideo size={16} />,
-        title: 'Up to 4K',
-        description: 'Lossless video up to 4K and MP3 audio up to 320kbps.'
+        title: 'Durable flow',
+        description: 'High-resolution streams keep the reliable merge path when audio is separate.'
     },
     {
         icon: <FiSmartphone size={16} />,
-        title: 'Any Device',
-        description: 'Works on Windows, Mac, iOS and Android — no installs needed.'
+        title: 'Any screen',
+        description: 'Responsive controls, readable type, and complete light and dark themes.'
     }
 ];
 

@@ -1,9 +1,33 @@
 const express = require('express');
 const cors = require('cors');
 const youtubedl = require('youtube-dl-exec');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { pipeline } = require('stream');
 
 const app = express();
 app.use(cors());
+
+const VIDEO_HOST_HEADERS = ['referer:youtube.com', 'user-agent:Mozilla/5.0'];
+const DIRECT_DELIVERY = process.env.CLIPTAKE_DIRECT_DELIVERY !== 'false';
+
+const mimeByExt = {
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    m4a: 'audio/mp4',
+    mp3: 'audio/mpeg',
+    opus: 'audio/ogg',
+    ogg: 'audio/ogg'
+};
+
+function sanitizeFilename(name = 'cliptake-download') {
+    return name
+        .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 140) || 'cliptake-download';
+}
 
 // Format bytes helper
 function formatBytes(bytes, decimals = 2) {
@@ -26,6 +50,23 @@ function formatDuration(totalSeconds) {
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+function isSingleFileFormat(format) {
+    return Boolean(format && format.acodec !== 'none' && (format.vcodec === 'none' || format.vcodec));
+}
+
+function getDeliveryMode(format) {
+    if (!format) return 'prepare';
+    if (format.vcodec !== 'none' && format.acodec === 'none') return 'prepare';
+    if (format.acodec !== 'none') return DIRECT_DELIVERY ? 'direct' : 'stream';
+    return 'prepare';
+}
+
+function sendProgress(sessionId, payload) {
+    const connection = connections.get(sessionId);
+    if (!connection) return;
+    connection.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
 app.get('/api/info', async (req, res) => {
     const { url } = req.query;
 
@@ -38,7 +79,6 @@ app.get('/api/info', async (req, res) => {
         const output = await youtubedl(url, {
             dumpJson: true,
             noWarnings: true,
-            callHome: false,
             noCheckCertificate: true,
         });
 
@@ -56,10 +96,11 @@ app.get('/api/info', async (req, res) => {
                 audioFormats.push({
                     format_id: f.format_id,
                     ext: f.ext,
-                    label: `${f.abr || f.tbr} kbps · ${f.ext.toUpperCase()}`,
+                    label: `${Math.round(f.abr || f.tbr || 0)} kbps · ${f.ext.toUpperCase()}`,
                     size: formattedSize,
                     rawSize: size || 0,
-                    quality: f.abr || 0
+                    quality: f.abr || 0,
+                    delivery: getDeliveryMode(f)
                 });
             }
             // Video formats
@@ -75,7 +116,9 @@ app.get('/api/info', async (req, res) => {
                     resolution: height,
                     label,
                     size: formattedSize,
-                    rawSize: size || 0
+                    rawSize: size || 0,
+                    hasAudio: f.acodec !== 'none',
+                    delivery: getDeliveryMode(f)
                 });
             }
         });
@@ -113,10 +156,6 @@ app.get('/api/info', async (req, res) => {
     }
 });
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-
 // SSE Connection Store
 const connections = new Map();
 
@@ -146,15 +185,7 @@ app.get('/api/download', async (req, res) => {
         return res.status(400).send('URL is required');
     }
 
-    let formatCode = format || 'best';
-
-    // For specific format ID (like video-only), tell yt-dlp to merge with best audio
-    // We add [ext=mp4] to encourage mp4 merging if possible, and fallback to mkv/webm if necessary
-    const formatReq = formatCode.includes('best') || formatCode.includes('audio')
-        ? formatCode
-        : `${formatCode}+bestaudio/best`;
-
-    console.log(`Downloading: ${url} with format: ${formatReq} (Session: ${sessionId})`);
+    const formatCode = format || 'best';
 
     // Create a temporary filename
     const tmpDir = os.tmpdir();
@@ -162,13 +193,84 @@ app.get('/api/download', async (req, res) => {
     const outputTemplate = path.join(tmpDir, `ytdlp_${sessionId}_%(title)s.%(ext)s`);
 
     try {
-        console.log(`Starting download to temp local file...`);
+        const info = await youtubedl(url, {
+            dumpJson: true,
+            noWarnings: true,
+            noCheckCertificate: true,
+        });
+        const selectedFormat = info.formats?.find(f => String(f.format_id) === String(formatCode));
+        const canStreamSingleFile = isSingleFileFormat(selectedFormat);
+        const needsMerge = selectedFormat
+            ? selectedFormat.vcodec !== 'none' && selectedFormat.acodec === 'none'
+            : !String(formatCode).includes('audio');
+        const formatReq = needsMerge && !String(formatCode).includes('best')
+            ? `${formatCode}+bestaudio/best`
+            : formatCode;
+        const safeTitle = sanitizeFilename(info.title);
+
+        console.log(`Downloading: ${url} with format: ${formatReq} (Session: ${sessionId})`);
+
+        if (canStreamSingleFile && selectedFormat?.url) {
+            sendProgress(sessionId, {
+                status: DIRECT_DELIVERY ? 'redirecting' : 'streaming',
+                percent: 100,
+                speed: DIRECT_DELIVERY ? 'Direct link' : 'Streaming',
+                eta: 'Starting'
+            });
+
+            if (connections.has(sessionId)) {
+                connections.get(sessionId).end();
+                connections.delete(sessionId);
+            }
+
+            if (DIRECT_DELIVERY) {
+                console.log('Redirecting client to provider media URL to avoid server egress.');
+                res.setHeader('Cache-Control', 'no-store');
+                return res.redirect(302, selectedFormat.url);
+            }
+
+            console.log('Proxy streaming single-file format without temp storage.');
+            const ext = selectedFormat.ext || 'mp4';
+            res.setHeader('Content-Type', mimeByExt[ext] || 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.${ext}"`);
+            res.setHeader('Cache-Control', 'no-store');
+
+            const streamProcess = youtubedl.exec(url, {
+                format: formatCode,
+                output: '-',
+                noWarnings: true,
+                addHeader: VIDEO_HOST_HEADERS
+            });
+
+            req.on('close', () => {
+                if (!res.writableEnded) streamProcess.kill('SIGTERM');
+            });
+
+            streamProcess.stderr.on('data', (data) => {
+                console.error(`yt-dlp stream stderr: ${data}`);
+            });
+
+            return pipeline(streamProcess.stdout, res, (err) => {
+                if (err) {
+                    console.error('Streaming pipeline error:', err);
+                }
+            });
+        }
+
+        sendProgress(sessionId, {
+            status: 'processing',
+            percent: 0,
+            speed: 'Preparing merge',
+            eta: 'Starting'
+        });
+
+        console.log(`Starting merged download to temp local file...`);
         // execute youtube-dl using the raw exec command to capture stdout
         const dlProcess = youtubedl.exec(url, {
             format: formatReq,
             output: outputTemplate,
             noWarnings: true,
-            addHeader: ['referer:youtube.com', 'user-agent:Mozilla/5.0']
+            addHeader: VIDEO_HOST_HEADERS
         });
 
         // Listen to stdout to parse downloading progress
@@ -176,28 +278,26 @@ app.get('/api/download', async (req, res) => {
             const output = data.toString();
             // yt-dlp stdout example: [download]  45.0% of 1.2GiB at 5.0MiB/s ETA 00:30
             const progressMatch = output.match(/\[download\]\s+([\d\.]+)%\s+of\s+.*?\s+at\s+(.*?)\s+ETA\s+(.*)/);
-            if (progressMatch && connections.has(sessionId)) {
+            if (progressMatch) {
                 const percent = parseFloat(progressMatch[1]);
                 const speed = progressMatch[2];
                 const eta = progressMatch[3].trim();
 
-                connections.get(sessionId).write(`data: ${JSON.stringify({
+                sendProgress(sessionId, {
                     status: 'downloading',
                     percent,
                     speed,
                     eta
-                })}\n\n`);
+                });
             } else if (output.includes('[Merger]') || output.includes('Merging')) {
-                if (connections.has(sessionId)) {
-                    connections.get(sessionId).write(`data: ${JSON.stringify({ status: 'processing' })}\n\n`);
-                }
+                sendProgress(sessionId, { status: 'processing', percent: 100, speed: 'Merging', eta: 'Finalizing' });
             }
         });
 
         await dlProcess; // Wait for completion
 
         if (connections.has(sessionId)) {
-            connections.get(sessionId).write(`data: ${JSON.stringify({ status: 'completed' })}\n\n`);
+            sendProgress(sessionId, { status: 'completed', percent: 100, speed: 'Ready', eta: 'Download starting' });
             connections.get(sessionId).end();
             connections.delete(sessionId);
         }
